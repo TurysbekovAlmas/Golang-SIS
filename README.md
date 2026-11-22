@@ -1,22 +1,22 @@
-# SIS Project - Checkpoint 1: Text Analyzer
+# SIS Project - Checkpoint 2: Concurrent Text Analyzer
 
 ## Overview
-This application is an in-memory synchronous Go task processing system designed for text analysis.
+This application extends the Checkpoint 1 in-memory Text Analyzer with concurrent task processing using a fixed-size **Worker Pool** and a **bounded channel-based queue**. It analyzes text inputs to calculate word, character, rune, and line counts[cite: 75].
 
-## Task Lifecycle
-- **Pending**: Task has been created and input has been validated.
-- **Processing**: Task is currently being evaluated.
-- **Completed**: Task processing finished successfully and results are stored.
-- **Failed**: Task failed during processing or validation.
+## Concurrency Architecture
 
-### Allowed Transitions:
-- `Pending` -> `Processing` -> `Completed`
-- `Pending` / `Processing` -> `Failed`
-
-*Note: Re-processing a task that is already `Completed` is prohibited and returns an error.*
-
-## Running Verification Commands
-```bash
-gofmt -l .
-go vet ./...
-go test -v ./...
+```text
+                 Bounded Queue (chan string, cap: 10)
+                 +----------------------------------+
+SubmitTask ----> |  [TASK-0001] [TASK-0002] ...     |
+                 +----------------------------------+
+                                  |
+                 +----------------+----------------+
+                 |                |                |
+                 v                v                v
+            Worker 1         Worker 2         Worker 3
+                 |                |                |
+                 +----------------+----------------+
+                                  |
+                                  v
+                 InMemoryRepository (sync.RWMutex)
